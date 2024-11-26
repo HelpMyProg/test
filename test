@@ -1,1 +1,34 @@
-qqqqqqqqqqqqqqqqqqqqq
+ private void Button_Click(object sender, RoutedEventArgs e)
+ {
+
+     using (var command = new SqlCommand())
+     {
+         connection.Open();
+         command.Connection = connection;
+
+         command.CommandText = "select [Role_User] from [dbo].[User1] where [Login_User]=@login and [Password_User]=@password";
+
+         command.Parameters.Add("@login", System.Data.SqlDbType.NVarChar).Value = Login.Text;
+         command.Parameters.Add("@password", System.Data.SqlDbType.NVarChar).Value = Password.Text;
+         using (SqlDataReader reader = command.ExecuteReader())
+         {
+             while (reader.Read())
+             {
+                 Role = reader["Role_User"].ToString();
+             }
+         }
+
+     }
+
+     if (Role == "admin")
+     {
+         Window1 wn = new Window1();
+         wn.Show();
+     }
+     else
+     {
+         Window2 wn2 = new Window2();
+         wn2.Show();
+     }
+
+ }
