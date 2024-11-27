@@ -1,34 +1,50 @@
- private void Button_Click(object sender, RoutedEventArgs e)
- {
+private readonly SqlConnection connection = new SqlConnection(@"Server=MURATOVAOV\SQLEXPRESS;Database=v2;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;encrypt=false");
 
-     using (var command = new SqlCommand())
-     {
-         connection.Open();
-         command.Connection = connection;
+Авторизация
+private void Button_Click(object sender, RoutedEventArgs e)
+{
+    using (var command = new SqlCommand())
+    {
+        connection.Open();
+        command.Connection = connection;
+        command.CommandText = "select [Имя] from [dbo].[Клиент] where [id]=@login and [Персональная скидка]=@password";
+        command.Parameters.Add("@login", System.Data.SqlDbType.NVarChar).Value = float.Parse(LoginText.Text);
+        command.Parameters.Add("@password", System.Data.SqlDbType.NVarChar).Value = float.Parse(PasswordText.Text);
+        using (SqlDataReader reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+            }
+        } 
+    }
 
-         command.CommandText = "select [Role_User] from [dbo].[User1] where [Login_User]=@login and [Password_User]=@password";
+Каталог
+        private string constring = @"Data Source = MURATOVAOV\SQLEXPRESS; 
+Initial Catalog = v2;Trusted_Connection=true;MultipleActiveResultSets=true;
+TrustServerCertificate=true;encrypt=false";
+private void LoadData()
+{
+    SqlConnection conn = new SqlConnection(constring);
+    conn.Open();
+    string cmd = "select * from [dbo].[Заявка]";
+    SqlCommand command = new SqlCommand(cmd, conn);
+    command.ExecuteNonQuery();
+    SqlDataAdapter adapter = new SqlDataAdapter(command);
+    DataTable dt = new DataTable();
+    adapter.Fill(dt);
+    StudentsGrid.ItemsSource = dt.DefaultView;
+}
+Добавление
+        private void add()
+        {
+            using (var command = new SqlCommand())
+            {
+                connection.Open();
+                command.Connection = connection;
+                command.CommandText = "insert into [dbo].[current_game] (name_CG, type_CG, class_CG, subject_CG)" +
+                    "values (@name_CG,@type_CG,@class_CG,@subject_CG)";
+                command.Parameters.Add("@name_CG", System.Data.SqlDbType.NVarChar).Value = game.name_CG;
+                command.ExecuteNonQuery();
 
-         command.Parameters.Add("@login", System.Data.SqlDbType.NVarChar).Value = Login.Text;
-         command.Parameters.Add("@password", System.Data.SqlDbType.NVarChar).Value = Password.Text;
-         using (SqlDataReader reader = command.ExecuteReader())
-         {
-             while (reader.Read())
-             {
-                 Role = reader["Role_User"].ToString();
-             }
-         }
-
-     }
-
-     if (Role == "admin")
-     {
-         Window1 wn = new Window1();
-         wn.Show();
-     }
-     else
-     {
-         Window2 wn2 = new Window2();
-         wn2.Show();
-     }
-
- }
+            }
+        }
