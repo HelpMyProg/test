@@ -1,50 +1,229 @@
-private readonly SqlConnection connection = new SqlConnection(@"Server=MURATOVAOV\SQLEXPRESS;Database=v2;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;encrypt=false");
+identity primary key
 
-Авторизация
-private void Button_Click(object sender, RoutedEventArgs e)
-{
-    using (var command = new SqlCommand())
-    {
-        connection.Open();
-        command.Connection = connection;
-        command.CommandText = "select [Имя] from [dbo].[Клиент] where [id]=@login and [Персональная скидка]=@password";
-        command.Parameters.Add("@login", System.Data.SqlDbType.NVarChar).Value = float.Parse(LoginText.Text);
-        command.Parameters.Add("@password", System.Data.SqlDbType.NVarChar).Value = float.Parse(PasswordText.Text);
-        using (SqlDataReader reader = command.ExecuteReader())
+<TextBlock TextWrapping="Wrap" Text="Список заказов" FontSize="16" Height="35" Width="200" VerticalAlignment="Top" TextAlignment="Center"></TextBlock>
+<ScrollViewer MaxHeight="400" Margin="10,40,10,50">
+    <StackPanel Background="Wheat" Name="ListOrder" Orientation="Vertical" />
+</ScrollViewer>
+<Button Content="Создать заказ" Height="40" FontSize="16" Width="150" VerticalAlignment="Bottom" Click="CreateOrderCommand"></Button>
+
+        public Authorization()
         {
-            while (reader.Read())
+            InitializeComponent();
+            List<LibraryV4.Order> spisok = LibraryV4.Library.LoadOrder();
+            string s;
+            for (int i =  0; i < spisok.Count; i++)
             {
+                s = spisok[i].Id.ToString() + ") " + spisok[i].CompoundOrder;
+                ListOrder.Children.Add(new TextBlock()
+                {
+                    Text = s,
+                    FontSize = 16,
+                    TextWrapping = TextWrapping.Wrap,
+                    VerticalAlignment = VerticalAlignment.Stretch
+                });
             }
-        } 
-    }
+        }
 
-Каталог
-        private string constring = @"Data Source = MURATOVAOV\SQLEXPRESS; 
-Initial Catalog = v2;Trusted_Connection=true;MultipleActiveResultSets=true;
-TrustServerCertificate=true;encrypt=false";
-private void LoadData()
-{
-    SqlConnection conn = new SqlConnection(constring);
-    conn.Open();
-    string cmd = "select * from [dbo].[Заявка]";
-    SqlCommand command = new SqlCommand(cmd, conn);
-    command.ExecuteNonQuery();
-    SqlDataAdapter adapter = new SqlDataAdapter(command);
-    DataTable dt = new DataTable();
-    adapter.Fill(dt);
-    StudentsGrid.ItemsSource = dt.DefaultView;
-}
-Добавление
-        private void add()
+        private void CreateOrderCommand(object sender, RoutedEventArgs e)
         {
+            AddOrder addOrder = new AddOrder();
+            addOrder.Show();
+            this.Close();
+
+        }
+
+<TextBlock TextWrapping="Wrap" Text="Создание заказа" FontSize="16" Height="35" Width="200" VerticalAlignment="Top" TextAlignment="Center"></TextBlock>
+
+<TextBlock Text="Официант" FontSize="16" Height="35" Width="100" Margin="81,80,619,319"></TextBlock>
+<TextBox Name="Stuff" FontSize="16" Height="35" Margin="181,80,70,319"/>
+
+<TextBlock Text="Стол" FontSize="16" Height="35" Width="100" Margin="81,143,619,256"></TextBlock>
+<TextBox Name="Table" FontSize="16" Height="35" Margin="181,143,70,256"/>
+
+<TextBlock Text="Блюдо" FontSize="16" Height="35" Width="100" Margin="81,200,619,199"/>
+<TextBox x:Name="Dish" FontSize="16" Height="35" Margin="181,200,70,199"/>
+
+<TextBlock Text="Количество" FontSize="16" Height="35" Width="100" Margin="81,259,619,140"/>
+<TextBox x:Name="Count" FontSize="16" Height="35" Margin="181,259,70,140"/>
+
+<TextBlock Text="Статус" FontSize="16" Height="35" Width="100" Margin="81,318,619,81"/>
+<TextBox x:Name="Status" FontSize="16" Height="35" Margin="181,318,70,81"/>
+
+<Button Content="Сохранить" Height="40" FontSize="16" Width="150" VerticalAlignment="Bottom" Click="SaveOrderCommand"></Button>
+<Button Content="Назад" Height="40" FontSize="16" Width="150" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="BackListOrderCommand"></Button>
+
+
+        public AddOrder()
+        {
+            InitializeComponent();
+            
+        }
+
+        private void SaveOrderCommand(object sender, RoutedEventArgs e)
+        {
+            LibraryV4.Library.CreateOrder(Stuff.Text, Table.Text, Dish.Text, Count.Text, Status.Text);
+        }
+
+        private void BackListOrderCommand(object sender, RoutedEventArgs e)
+        {
+            Authorization a = new Authorization();
+            a.Show();
+            this.Close();
+        }
+
+        public static List<Order> LoadOrder()
+        {
+            Order order;
+            List<Order> list = new List<Order>();
+            string s = "";
             using (var command = new SqlCommand())
             {
                 connection.Open();
                 command.Connection = connection;
-                command.CommandText = "insert into [dbo].[current_game] (name_CG, type_CG, class_CG, subject_CG)" +
-                    "values (@name_CG,@type_CG,@class_CG,@subject_CG)";
-                command.Parameters.Add("@name_CG", System.Data.SqlDbType.NVarChar).Value = game.name_CG;
-                command.ExecuteNonQuery();
+                command.CommandText = "select * from [dbo].[Заказ$] ";
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        order = new Order();
+                        order.Id = float.Parse(reader["Id"].ToString());
 
+                        using (var command1 = new SqlCommand())
+                        {
+                            command1.Connection = connection;
+                            command1.CommandText = "select * from [dbo].[СоставЗаказа$] where [Заказ]=@num";
+                            command1.Parameters.Add("@num", System.Data.SqlDbType.NVarChar).Value = order.Id;
+                            using (SqlDataReader reader1 = command1.ExecuteReader())
+                            {
+                                while (reader1.Read())
+                                {
+                                    using (var command2 = new SqlCommand())
+                                    {
+                                        command2.Connection = connection;
+                                        command2.CommandText = "select [Название] from [dbo].[Блюдо$] where [Id]=@num";
+                                        command2.Parameters.Add("@num", System.Data.SqlDbType.NVarChar).Value = float.Parse(reader1["Блюдо"].ToString());
+                                        using (SqlDataReader reader2 = command2.ExecuteReader())
+                                        {
+                                            while (reader2.Read())
+                                            {
+
+                                                s += reader2["Название"].ToString();
+                                            }
+                                        }
+                                    }
+                                    s += " - cтатус: "+ reader1["Статус"].ToString()+"\n";
+                                }
+                                order.CompoundOrder = s;
+                                s = "";
+                            }
+                        }
+                        list.Add(order);
+                    }
+                }
+                connection.Close();
             }
+            
+            return list;
         }
+
+
+        public static void CreateOrder(string stuff, string table, string Dish, string Count, string Status)
+        {
+            float i = 0;
+            float j = 0;
+            using (var command2 = new SqlCommand())
+            {
+                connection.Open();
+                command2.Connection = connection;
+                command2.CommandText = "select [Id] from [dbo].[Заказ$]";
+                using (SqlDataReader reader2 = command2.ExecuteReader())
+                {
+                    while (reader2.Read())
+                    {
+
+                        i = float.Parse(reader2["Id"].ToString());
+                    }
+                }
+                connection.Close();
+            }
+            using (var command = new SqlCommand())
+            {
+                connection.Open();
+                command.Connection = connection;
+                command.CommandText = "insert into [dbo].[Заказ$] (Id, Официант, Стол)" +
+                    "values (@id, @stuff,@table)";
+                command.Parameters.Add("@id", System.Data.SqlDbType.NVarChar).Value = i+1;
+                command.Parameters.Add("@stuff", System.Data.SqlDbType.NVarChar).Value = stuff;
+                command.Parameters.Add("@table", System.Data.SqlDbType.NVarChar).Value = table;
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
+
+            using (var command3 = new SqlCommand())
+            {
+                connection.Open();
+                command3.Connection = connection;
+                command3.CommandText = "select [Id] from [dbo].[СоставЗаказа$]";
+                using (SqlDataReader reader2 = command3.ExecuteReader())
+                {
+                    while (reader2.Read())
+                    {
+
+                        j = float.Parse(reader2["Id"].ToString());
+                    }
+                }
+                connection.Close();
+            }
+
+
+            using (var command = new SqlCommand())
+            {
+                connection.Open();
+                command.Connection = connection;
+                command.CommandText = "insert into [dbo].[СоставЗаказа$] (Id, Заказ, Блюдо, Количество,Статус)" +
+                    "values (@id,@order,@Dish,@Count,@Status)";
+                command.Parameters.Add("@id", System.Data.SqlDbType.NVarChar).Value = j+1;
+                command.Parameters.Add("@order", System.Data.SqlDbType.NVarChar).Value = i+1;
+                command.Parameters.Add("@Dish", System.Data.SqlDbType.NVarChar).Value = Dish;
+                command.Parameters.Add("@Count", System.Data.SqlDbType.NVarChar).Value = Count;
+                command.Parameters.Add("@Status", System.Data.SqlDbType.NVarChar).Value = Status;
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
+
+        }
+
+public void CreateOrder_CreatesOrderWithCorrectData()
+{
+    string stuff = "Андреев";
+    string table = "14";
+    string dish = "Грибная юшка";
+    string count = "6";
+    string status = "Завершен";
+    LibraryV4.Library.CreateOrder(stuff, table, dish, count, status);
+    Microsoft.Data.SqlClient.SqlConnection connection = new Microsoft.Data.SqlClient.SqlConnection
+        (@"Server=MURATOVAOV\SQLEXPRESS;Database=v4;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;encrypt=false");
+
+
+
+    using (var command = new Microsoft.Data.SqlClient.SqlCommand($"SELECT COUNT(*) FROM [dbo].[Заказ$] WHERE Официант = @stuff AND Стол = @table", connection))
+    {
+        command.Parameters.AddWithValue("@stuff", stuff);
+        command.Parameters.AddWithValue("@table", table);
+        connection.Open();
+        int countЗаказ = (int)command.ExecuteScalar();
+        Assert.AreEqual(1, countЗаказ, "Заказ не добавлен");
+    }
+
+    using (var command2 = new Microsoft.Data.SqlClient.SqlCommand($"SELECT COUNT(*) FROM [dbo].[СоставЗаказа$] WHERE Заказ = @order AND Блюдо = @Dish AND Количество = @Count AND Статус = @Status", connection))
+    {
+        command2.Parameters.AddWithValue("@order", (53 + 1).ToString()); //получаем последний ID
+        command2.Parameters.AddWithValue("@Dish", dish);
+        command2.Parameters.AddWithValue("@Count", count);
+        command2.Parameters.AddWithValue("@Status", status);
+
+        int countСоставЗаказа = (int)command2.ExecuteScalar();
+        Assert.AreEqual(1, countСоставЗаказа, "Строка в СоставЗаказа не добавлена");
+    }
+
+}
