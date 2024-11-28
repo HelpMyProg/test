@@ -227,3 +227,26 @@ public void CreateOrder_CreatesOrderWithCorrectData()
     }
 
 }
+
+[TestMethod]
+public void Test_ValidLogin_ValidPassword()
+{
+string login = &quot;velizhanina&quot;;
+string password = &quot;123&quot;;
+Assert.AreEqual(3, DataWork.GetUser(login, password).ID);
+}
+
+[TestMethod]
+public void GetExecList_TypeTest()
+{
+User user = new User();
+user.ID = 1;
+Assert.IsNotNull(DataWork.GetExecTasks(user, &quot;&quot;));
+}
+[TestMethod]
+public void IsManager_True()
+{
+User user = new User();
+user.ID = 12;
+Assert.IsTrue(DataWork.IsManager(user));
+}
